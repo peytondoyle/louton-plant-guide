@@ -2,15 +2,30 @@ import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [plants, setPlants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchPlants() {
-      const res = await fetch('/api/plants');
-      const data = await res.json();
-      setPlants(data);
+      try {
+        const res = await fetch('/api/plants');
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        const data = await res.json();
+        
+        if (!Array.isArray(data)) throw new Error('Data is not an array');
+        
+        setPlants(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchPlants();
   }, []);
+
+  if (loading) return <p>Loading plants...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -20,7 +35,7 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {plants.map((plant) => (
             <div key={plant.id} className="bg-white p-4 rounded shadow">
-              {plant.fields.Image && (
+              {plant.fields?.Image && (
                 <img
                   src={plant.fields.Image}
                   alt={plant.fields['Plant name']}
@@ -30,7 +45,7 @@ export default function Home() {
               <h2 className="text-xl font-semibold mt-2">
                 {plant.fields['Plant name']}
               </h2>
-              {plant.fields.Description && (
+              {plant.fields?.Description && (
                 <p className="text-gray-600 mt-1">
                   {plant.fields.Description}
                 </p>
