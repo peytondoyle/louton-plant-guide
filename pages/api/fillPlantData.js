@@ -25,16 +25,15 @@ export default async function handler(req, res) {
           {
             role: "user",
             content: `Provide detailed plant pruning information for "${plantName}". 
-              The pruning details must be clear, useful, and fit within 25-30 characters. 
-              Example: "Trim lightly in spring." Respond ONLY in valid JSON:
+              The pruning details must be clear, useful, and fit within 30-40 characters. 
+              Example: "Trim lightly in spring." Respond ONLY in valid JSON:truncateText
               {
                 "Type": "Perennial/Annual/Other",
                 "Growth": "Slow/Moderate/Fast",
                 "Width": 0,
                 "Height": 0,
                 "Spacing": 0,
-                "PruningTime": "Best time to prune",
-                "PruningDetails": "Details about how to prune"
+                "Pruning": "Best time and method in one sentence"
               }`
             }
           ],
@@ -84,8 +83,7 @@ export default async function handler(req, res) {
       "Width in inches": plantData.Width, // ✅ Matches Airtable
       "Height in inches": plantData.Height, // ✅ Matches Airtable
       "Space in inches": plantData.Spacing, // ✅ Matches Airtable
-      "Pruning time": plantData.PruningTime, // ✅ Matches Airtable
-      "Pruning details": plantData.PruningDetails // ✅ Matches Airtable
+      "Pruning": plantData.Pruning, // ✅ Matches Airtable
     };
 
     console.log("🚀 Sending to Airtable:", plantData);

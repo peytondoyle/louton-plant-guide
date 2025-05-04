@@ -3,7 +3,7 @@ import { useState } from "react";
 export default function PlantCard({ plant, setPlants }) {
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showFullText, setShowFullText] = useState(false); // ✅ Track expanded state
+  const [showFullText, setShowFullText] = useState(false);
 
   const formatSize = (value) => {
     if (!value || isNaN(value)) return "N/A";
@@ -61,28 +61,28 @@ export default function PlantCard({ plant, setPlants }) {
     >
       <div className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${flipped ? "rotate-y-180" : ""}`}>
 
-        {/* 🌿 Front of the Card */}
+        {/* Front */}
         <div className="absolute w-full h-full bg-white shadow-md rounded-lg overflow-hidden flex flex-col">
-          {plant.fields?.Image && (
+          {plant.fields?.Image ? (
             <img
               src={plant.fields.Image}
               alt={plant.fields["Plant name"]}
               className="w-full h-3/4 object-cover"
             />
+          ) : (
+            <div className="w-full h-3/4 bg-gray-100 flex items-center justify-center text-gray-400 italic text-sm">
+              No Image
+            </div>
           )}
           <div className="flex-grow flex flex-col items-center justify-center p-2">
-            <h2 className="text-xl font-semibold text-center">
-              {plant.fields["Plant name"]}
-            </h2>
+            <h2 className="text-lg font-semibold text-center">{plant.fields["Plant name"]}</h2>
             {plant.fields["Detailed name"] && (
-              <p className="text-sm italic text-gray-500">
-                {plant.fields["Detailed name"]}
-              </p>
+              <p className="text-sm italic text-gray-500">{plant.fields["Detailed name"]}</p>
             )}
           </div>
         </div>
 
-        {/* 🌱 Back of the Card */}
+        {/* Back */}
         <div className="absolute w-full h-full bg-gray-50 shadow-md rounded-lg overflow-hidden flex flex-col p-4 transform rotate-y-180 backface-hidden">
           <h3 className="text-lg font-bold text-center">{plant.fields["Plant name"]}</h3>
 
@@ -94,39 +94,34 @@ export default function PlantCard({ plant, setPlants }) {
             📈 <span className="font-semibold">Growth:</span> {plant.fields.Growth || "N/A"}
           </p>
 
-          {/* 📏 Size Section */}
           <p className="font-semibold text-sm mt-3">📏 Size</p>
           <p className="text-sm">↔ Width: {formatSize(plant.fields["Width in inches"])}</p>
           <p className="text-sm">⬆ Height: {formatSize(plant.fields["Height in inches"])}</p>
           <p className="text-sm">🌿 Spacing: {formatSize(plant.fields["Space in inches"])}</p>
 
-          {/* ✂️ Pruning Section */}
-            {plant.fields["Pruning time"] && (
-              <div className="mt-3">
-                <p className="font-semibold text-sm">✂️ Pruning</p>
-                <p className="text-sm">{plant.fields["Pruning time"].replace(/\.$/, "")}</p>
+          {plant.fields["Pruning time"] && (
+            <div className="mt-3">
+              <p className="font-semibold text-sm">✂️ Pruning</p>
+              <p className="text-sm">{plant.fields["Pruning time"].replace(/\.$/, "")}</p>
+              {plant.fields["Pruning details"] && (
+                <p className="text-sm text-gray-700">
+                  📝 {truncateText(plant.fields["Pruning details"])}
+                  {plant.fields["Pruning details"].length > 25 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFullText(!showFullText);
+                      }}
+                      className="text-blue-500 ml-1 text-xs underline"
+                    >
+                      {showFullText ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+          )}
 
-                {plant.fields["Pruning details"] && (
-                  <p className="text-sm text-gray-700">
-                    📝 {truncateText(plant.fields["Pruning details"])}
-
-                    {plant.fields["Pruning details"].length > 25 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowFullText(!showFullText);
-                        }}
-                        className="text-blue-500 ml-1 text-xs underline"
-                      >
-                        {showFullText ? "Show less" : "Show more"}
-                      </button>
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
-
-          {/* 🔄 Fetch Button for Missing Data */}
           {isMissingData && (
             <button
               onClick={(e) => fetchMissingPlantData(e)}
