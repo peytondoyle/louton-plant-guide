@@ -1,7 +1,8 @@
 import { useState } from "react";
+import Buttons from "./Buttons";
 
 export default function EditPlantModal({ plant, onClose, onUpdate }) {
-  const initialFields = {
+  const [form, setForm] = useState({
     "Plant name": plant.fields["Plant name"] || "",
     "Detailed name": plant.fields["Detailed name"] || "",
     "Yard location": plant.fields["Yard location"] || "",
@@ -11,13 +12,12 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
     "Height in inches": plant.fields["Height in inches"] || "",
     "Space in inches": plant.fields["Space in inches"] || "",
     Pruning: plant.fields.Pruning || "",
-  };
+  });
 
-  const [form, setForm] = useState(initialFields);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm({ ...form, [field]: value });
   };
 
   const handleSubmit = async () => {
@@ -31,11 +31,12 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
 
       const data = await res.json();
       if (!res.ok) {
+        console.log("Updating plant with fields:", form);
         const message = typeof data.error === "string" ? data.error : JSON.stringify(data.error);
         throw new Error(message || "Update failed");
       }
 
-      onUpdate({ ...plant, fields: data.updatedFields });
+      onUpdate(data.updatedFields);
       onClose();
     } catch (err) {
       console.error("Update error:", err);
@@ -46,10 +47,10 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
   };
 
   return (
-    <div className="absolute inset-0 bg-white rounded-lg p-4 shadow-md z-50 flex flex-col overflow-hidden">
-      <div className="overflow-y-auto px-2 pb-4">
+    <div className="absolute inset-0 bg-white rounded-lg shadow-md z-50 flex flex-col overflow-hidden">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-3 pt-4 pb-20">
         <h2 className="text-lg font-bold mb-4 text-center">Edit Plant</h2>
-
         {Object.entries(form).map(([key, value]) => (
           <div key={key} className="mb-3">
             <label className="block text-sm font-semibold mb-1">{key}</label>
@@ -63,20 +64,12 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
         ))}
       </div>
 
-      <div className="mt-auto pt-2 flex justify-end gap-2 border-t">
-        <button
-          onClick={onClose}
-          className="flex items-center gap-1 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition"
-        >
+      {/* Sticky button bar */}
+      <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-3 flex justify-end gap-2">
+        <Buttons onClick={onClose}>Cancel</Buttons>
+        <Buttons onClick={handleSubmit} disabled={loading} variant="primary">
           {loading ? "Saving..." : "Save"}
-        </button>
+        </Buttons>
       </div>
     </div>
   );

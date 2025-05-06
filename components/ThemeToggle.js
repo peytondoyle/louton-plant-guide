@@ -18,7 +18,6 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="fixed top-4 right-4 bg-gray-200 dark:bg-gray-700 p-2 rounded-full shadow-lg"
     >
       {resolvedTheme === "light" ? <SunIcon className="h-6 w-6 text-yellow-500" /> :
        resolvedTheme === "dark" ? <MoonIcon className="h-6 w-6 text-gray-200" /> :

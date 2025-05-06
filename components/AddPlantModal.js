@@ -9,12 +9,14 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
   const [imageOptions, setImageOptions] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [step, setStep] = useState(1);
+  const [yearPlanted, setYearPlanted] = useState("");
 
   const fetchPlantImages = async () => {
     if (!plantName.trim()) return;
 
     try {
-      const response = await fetch(`/api/fetchPlantImages?query=${encodeURIComponent(plantName)}`);
+      const query = [plantName, detailedName].filter(Boolean).join(" ");
+      const response = await fetch(`/api/fetchPlantImages?query=${encodeURIComponent(query)}`);
       const data = await response.json();
 
       if (data.error || !data.images.length) {
@@ -49,7 +51,7 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
         return;
       }
 
-      const response = await fetch("/api/addPlant", {
+      const addResponse = await fetch("/api/addPlant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -57,14 +59,35 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
           detailedName,
           yardLocation,
           image: selectedImage,
+          yearPlanted,
         }),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to add plant");
+      const addResult = await addResponse.json();
+      if (!addResponse.ok) throw new Error(addResult.error || "Failed to add plant");
+
+      const recordId = addResult.plant?.id;
+
+      // Trigger fill in details if plant was added
+      if (recordId) {
+        const fillResponse = await fetch("/api/fillPlantData", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plantName,
+            detailedName,
+            recordId,
+          }),
+        });
+
+        const fillResult = await fillResponse.json();
+        if (!fillResult.success) {
+          console.warn("⚠️ Auto-fill failed:", fillResult.error);
+        }
+      }
 
       alert("Plant added successfully!");
-      onPlantAdded(result.plant);
+      onPlantAdded(addResult.plant);
       onClose();
       window.location.reload(); // Optional: force refresh
     } catch (error) {
@@ -76,10 +99,10 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center px-4">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
-        <h2 className="text-lg font-bold mb-4 text-center">Add a New Plant</h2>
-
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-70 z-50 flex justify-center items-center px-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 flex flex-col">
+        <h2 className="text-xl font-semibold text-center mb-6 text-gray-900">Add a New Plant</h2>
+  
         {step === 1 ? (
           <>
             <input
@@ -87,64 +110,69 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
               placeholder="Plant Name"
               value={plantName}
               onChange={(e) => setPlantName(e.target.value)}
-              className="w-full p-2 border rounded mb-2 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
             <input
               type="text"
               placeholder="Detailed Name"
               value={detailedName}
               onChange={(e) => setDetailedName(e.target.value)}
-              className="w-full p-2 border rounded mb-2 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
             <input
               type="text"
               placeholder="Yard Location"
               value={yardLocation}
               onChange={(e) => setYardLocation(e.target.value)}
-              className="w-full p-2 border rounded mb-2 text-sm"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
-
+            <input
+              type="number"
+              placeholder="Year Planted"
+              value={yearPlanted}
+              onChange={(e) => setYearPlanted(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+  
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-blue-500 text-white py-2 rounded text-sm hover:bg-blue-600 transition"
+              className="w-full bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition"
             >
               {loading ? "Loading..." : "Next"}
             </button>
           </>
         ) : (
           <>
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Select an Image</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Select an Image</h3>
             <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
               {imageOptions.map((img, index) => (
                 <div key={index} className="relative w-full aspect-square">
-                  <Image
+                  <img
                     src={img}
                     alt="Plant option"
-                    layout="fill"
-                    objectFit="cover"
-                    className={`rounded cursor-pointer ${
-                      selectedImage === img ? "ring-4 ring-blue-500" : "ring-1 ring-gray-300"
+                    className={`w-full h-full object-cover rounded cursor-pointer ${
+                      selectedImage === img ? "ring-4 ring-green-500" : "ring-1 ring-gray-300"
                     }`}
                     onClick={() => setSelectedImage(img)}
                   />
                 </div>
               ))}
             </div>
-
+  
             <button
               onClick={handleSubmit}
               disabled={loading || !selectedImage}
-              className="w-full bg-green-600 text-white py-2 rounded text-sm mt-4 hover:bg-green-700 transition"
+              className="w-full bg-green-600 text-white py-2 rounded-lg text-sm mt-4 hover:bg-green-700 transition"
             >
               {loading ? "Saving..." : "Save Plant"}
             </button>
           </>
         )}
-
+  
         <button
           onClick={onClose}
-          className="w-full text-gray-500 text-sm mt-3 hover:underline"
+          className="w-full mt-3 text-sm text-gray-500 hover:underline text-center"
         >
           Cancel
         </button>

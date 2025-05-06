@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
     const { query } = req.query;
+    console.log("Image fetch query:", query);
     
     if (!query) {
       return res.status(400).json({ error: "Missing search query" });

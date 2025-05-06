@@ -1,8 +1,8 @@
 import { useState } from "react";
 import EditPlantModal from "./EditPlantModal";
+import Buttons from "./Buttons";
 
 export default function PlantCard({ plant, setPlants }) {
-
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
@@ -31,6 +31,7 @@ export default function PlantCard({ plant, setPlants }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plantName: plant.fields["Plant name"],
+          detailedName: plant.fields["Detailed name"],
           recordId: plant.id,
         }),
       });
@@ -101,7 +102,7 @@ export default function PlantCard({ plant, setPlants }) {
               className="w-full h-3/4 object-cover"
             />
           ) : (
-            <div className="w-full h-3/4 bg-gray-100 flex items-center justify-center text-gray-400 italic text-sm">
+            <div className="w-full h-3/4 flex items-center justify-center text-gray-400 italic text-sm">
               No Image
             </div>
           )}
@@ -114,8 +115,8 @@ export default function PlantCard({ plant, setPlants }) {
         </div>
 
         {/* BACK */}
-        <div className="absolute w-full h-full bg-gray-50 shadow-md rounded-lg overflow-hidden flex flex-col justify-between p-3 transform rotate-y-180 backface-hidden">
-          <div>
+        <div className="absolute w-full h-full bg-gray-50 shadow-md rounded-lg overflow-hidden flex flex-col transform rotate-y-180 backface-hidden">
+          <div className="flex-1 overflow-y-auto p-3">
             <h3 className="text-base font-semibold text-center leading-snug">
               {plant.fields["Plant name"]}
             </h3>
@@ -133,17 +134,23 @@ export default function PlantCard({ plant, setPlants }) {
               📈 <span className="font-semibold">Growth:</span> {plant.fields.Growth || "N/A"}
             </p>
 
+            <p className="text-sm">
+              🗓 <span className="font-semibold">Planted:</span> {plant.fields["Year planted"] || "N/A"}
+            </p>
+
             <p className="font-semibold text-sm mt-3">📏 Size</p>
             <p className="text-sm">↔ Width: {formatSize(plant.fields["Width in inches"])}</p>
             <p className="text-sm">⬆ Height: {formatSize(plant.fields["Height in inches"])}</p>
             <p className="text-sm">🌿 Spacing: {formatSize(plant.fields["Space in inches"])}</p>
 
-            {plant.fields["Pruning time"] && (
+            {(plant.fields["Pruning"] || plant.fields["Pruning details"]) && (
               <div className="mt-3">
                 <p className="font-semibold text-sm">✂️ Pruning</p>
-                <p className="text-sm">{plant.fields["Pruning time"].replace(/\.$/, "")}</p>
+                {plant.fields["Pruning"] && (
+                  <p className="text-sm text-gray-800">{plant.fields["Pruning"]}</p>
+                )}
                 {plant.fields["Pruning details"] && (
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 mt-1">
                     📝 {truncateText(plant.fields["Pruning details"])}
                     {plant.fields["Pruning details"].length > 25 && (
                       <button
@@ -172,27 +179,18 @@ export default function PlantCard({ plant, setPlants }) {
             )}
           </div>
 
-          {/* Buttons bottom right */}
-          <div className="flex justify-end gap-2 mt-4">
-            <button
+          <div className="border-t p-3 flex justify-end gap-2 bg-gray-50">
+            <Buttons
               onClick={(e) => {
                 e.stopPropagation();
                 setShowEditModal(true);
               }}
-              className="flex items-center gap-1 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition"
             >
-              ✏️ Edit
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeletePlant();
-              }}
-              className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition"
-            >
-              🗑️ Delete
-            </button>
+              <span role="img" aria-label="edit">✏️</span> Edit
+            </Buttons>
+            <Buttons onClick={handleDeletePlant} variant="danger">
+              <span role="img" aria-label="delete">🗑</span> Delete
+            </Buttons>
           </div>
         </div>
       </div>
@@ -204,7 +202,6 @@ export default function PlantCard({ plant, setPlants }) {
           onUpdate={(updatedPlant) =>
             setPlants((prev) => prev.map((p) => (p.id === plant.id ? updatedPlant : p)))
           }
-          show={showEditModal}
         />
       )}
     </div>
