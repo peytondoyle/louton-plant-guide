@@ -34,7 +34,7 @@ export default function AuthModal() {
 
         <button
           onClick={enableBrowseOnly}
-          className="text-sm text-gray-600 hover:underline mt-1"
+          className="text-md text-gray-600 hover:underline mt-1"
           type="button"
         >
           Just here to browse
