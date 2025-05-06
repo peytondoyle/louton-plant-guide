@@ -138,6 +138,12 @@ export default function PlantCard({ plant, setPlants }) {
               🗓 <span className="font-semibold">Planted:</span> {plant.fields["Year planted"] || "N/A"}
             </p>
 
+            {plant.fields["Expected bloom"] && (
+              <p className="text-sm">
+                🌸 <span className="font-semibold">Bloom:</span> {plant.fields["Expected bloom"]}
+              </p>
+            )}
+
             <p className="font-semibold text-sm mt-3">📏 Size</p>
             <p className="text-sm">↔ Width: {formatSize(plant.fields["Width in inches"])}</p>
             <p className="text-sm">⬆ Height: {formatSize(plant.fields["Height in inches"])}</p>

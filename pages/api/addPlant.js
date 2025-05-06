@@ -8,13 +8,15 @@ export default async function handler(req, res) {
   const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
   const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
   const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME;
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
   if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !AIRTABLE_TABLE_NAME) {
     return res.status(500).json({ error: "Airtable API credentials are missing." });
   }
 
   try {
-    const response = await fetch(
+    // Step 1: Create the plant record in Airtable
+    const airtableResponse = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`,
       {
         method: "POST",
@@ -38,16 +40,55 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const airtableData = await airtableResponse.json();
 
-    if (!response.ok || !data.records || data.records.length === 0) {
-      console.error("Airtable Error:", data);
-      return res.status(500).json({ error: "Failed to save plant to Airtable." });
+    if (!airtableResponse.ok || !airtableData.records || airtableData.records.length === 0) {
+      console.error("Airtable creation error:", airtableData);
+      return res.status(500).json({ error: "Failed to create plant in Airtable." });
     }
 
-    res.status(200).json({ success: true, plant: data.records[0] });
+    const newRecord = airtableData.records[0];
+
+    // Step 2: Use ChatGPT to enrich the record with details
+    const enrichResponse = await fetch(`${BASE_URL}/api/fillPlantData`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plantName,
+        detailedName,
+        recordId: newRecord.id,
+      }),
+    });
+
+    const enrichData = await enrichResponse.json();
+
+    if (!enrichResponse.ok || !enrichData.success) {
+      console.warn("Plant added, but enrich failed:", enrichData.error || enrichData);
+      return res.status(200).json({
+        success: true,
+        partial: true,
+        message: "Plant added, but enrichment failed.",
+        plant: {
+          id: newRecord.id,
+          fields: newRecord.fields,
+        },
+      });
+    }
+
+    const updatedFields = enrichData.airtableData?.records?.[0]?.fields || {};
+
+    return res.status(200).json({
+      success: true,
+      plant: {
+        id: newRecord.id,
+        fields: {
+          ...newRecord.fields,
+          ...updatedFields,
+        },
+      },
+    });
   } catch (error) {
-    console.error("Error adding plant:", error);
-    res.status(500).json({ error: "Failed to add plant" });
+    console.error("Unexpected error in addPlant:", error);
+    return res.status(500).json({ error: "Unexpected error while adding plant." });
   }
 }
