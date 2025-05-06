@@ -18,7 +18,8 @@ export default function AuthModal() {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded shadow-lg flex flex-col gap-4"
       >
-        <h2 className="text-lg font-bold">Enter Garden Password</h2>
+        <h2 className="text-lg font-bold text-center">Plants de Louton</h2>
+        <h4 className="text-md text-center mb-4">Enter password</h4>
         <input
           type="password"
           className="border p-2 rounded"
