@@ -35,22 +35,20 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
       alert("Plant Name is required!");
       return;
     }
-
+  
     setLoading(true);
-
-    if (step === 1) {
-      await fetchPlantImages();
-      setLoading(false);
-      return;
-    }
-
-    if (!selectedImage) {
-      alert("Please select an image.");
-      setLoading(false);
-      return;
-    }
-
+  
     try {
+      if (step === 1) {
+        await fetchPlantImages();
+        return; // ✅ loading state will be reset in finally
+      }
+  
+      if (!selectedImage) {
+        alert("Please select an image.");
+        return;
+      }
+  
       const response = await fetch("/api/addPlant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,10 +59,10 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
           image: selectedImage,
         }),
       });
-
+  
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to add plant");
-
+  
       alert("Plant added successfully!");
       onPlantAdded(result.plant);
       onClose(); // Auto-close after successful submission
@@ -73,7 +71,7 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
       console.error("Failed to add plant:", error);
       alert("Failed to add plant.");
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Always run, regardless of return or error
     }
   }
 

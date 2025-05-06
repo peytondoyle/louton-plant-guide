@@ -1,8 +1,9 @@
 import { useState } from "react";
 import EditPlantModal from "./EditPlantModal";
 
-export default function PlantCard({ plant, setPlants, onEdit, onDelete }) {
+export default function PlantCard({ plant, setPlants }) {
   if (!plant || !plant.fields) return null;
+
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
@@ -54,16 +55,16 @@ export default function PlantCard({ plant, setPlants, onEdit, onDelete }) {
 
   async function handleDeletePlant() {
     if (!confirm("Are you sure you want to delete this plant?")) return;
-  
+
     try {
       const res = await fetch(`/api/deletePlant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recordId: plant.id }),
       });
-  
+
       const result = await res.json();
-  
+
       if (result.success) {
         setPlants((prev) => prev.filter((p) => p.id !== plant.id));
       } else {
@@ -112,66 +113,66 @@ export default function PlantCard({ plant, setPlants, onEdit, onDelete }) {
         </div>
 
         {/* BACK */}
-        <div className="absolute w-full h-full bg-gray-50 shadow-md rounded-lg overflow-hidden flex flex-col p-3 transform rotate-y-180 backface-hidden">
-          <h3 className="text-base font-semibold text-center leading-snug">
-            {plant.fields["Plant name"]}
-          </h3>
-          {plant.fields["Detailed name"] && (
-            <p className="text-xs italic text-gray-500 text-center -mt-0.5">
-              {plant.fields["Detailed name"]}
+        <div className="absolute w-full h-full bg-gray-50 shadow-md rounded-lg overflow-hidden flex flex-col justify-between p-3 transform rotate-y-180 backface-hidden">
+          <div>
+            <h3 className="text-base font-semibold text-center leading-snug">
+              {plant.fields["Plant name"]}
+            </h3>
+            {plant.fields["Detailed name"] && (
+              <p className="text-xs italic text-gray-500 text-center -mt-0.5">
+                {plant.fields["Detailed name"]}
+              </p>
+            )}
+
+            <p className="mt-3 text-sm">
+              🌱 <span className="font-semibold">Type:</span> {plant.fields.Type || "N/A"}
             </p>
-          )}
 
-          <p className="mt-3 text-sm">
-            🌱 <span className="font-semibold">Type:</span> {plant.fields.Type || "N/A"}
-          </p>
+            <p className="text-sm">
+              📈 <span className="font-semibold">Growth:</span> {plant.fields.Growth || "N/A"}
+            </p>
 
-          <p className="text-sm">
-            📈 <span className="font-semibold">Growth:</span> {plant.fields.Growth || "N/A"}
-          </p>
+            <p className="font-semibold text-sm mt-3">📏 Size</p>
+            <p className="text-sm">↔ Width: {formatSize(plant.fields["Width in inches"])}</p>
+            <p className="text-sm">⬆ Height: {formatSize(plant.fields["Height in inches"])}</p>
+            <p className="text-sm">🌿 Spacing: {formatSize(plant.fields["Space in inches"])}</p>
 
-          <p className="font-semibold text-sm mt-3">📏 Size</p>
-          <p className="text-sm">↔ Width: {formatSize(plant.fields["Width in inches"])}</p>
-          <p className="text-sm">⬆ Height: {formatSize(plant.fields["Height in inches"])}</p>
-          <p className="text-sm">🌿 Spacing: {formatSize(plant.fields["Space in inches"])}</p>
+            {plant.fields["Pruning time"] && (
+              <div className="mt-3">
+                <p className="font-semibold text-sm">✂️ Pruning</p>
+                <p className="text-sm">{plant.fields["Pruning time"].replace(/\.$/, "")}</p>
+                {plant.fields["Pruning details"] && (
+                  <p className="text-sm text-gray-700">
+                    📝 {truncateText(plant.fields["Pruning details"])}
+                    {plant.fields["Pruning details"].length > 25 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowFullText(!showFullText);
+                        }}
+                        className="text-blue-500 ml-1 text-xs underline"
+                      >
+                        {showFullText ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
 
-          {/* ✂️ Pruning Section */}
-          {plant.fields["Pruning time"] && (
-            <div className="mt-3">
-              <p className="font-semibold text-sm">✂️ Pruning</p>
-              <p className="text-sm">{plant.fields["Pruning time"].replace(/\.$/, "")}</p>
-              {plant.fields["Pruning details"] && (
-                <p className="text-sm text-gray-700">
-                  📝 {truncateText(plant.fields["Pruning details"])}
-                  {plant.fields["Pruning details"].length > 25 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowFullText(!showFullText);
-                      }}
-                      className="text-blue-500 ml-1 text-xs underline"
-                    >
-                      {showFullText ? "Show less" : "Show more"}
-                    </button>
-                  )}
-                </p>
-              )}
-            </div>
-          )}
+            {isMissingData && (
+              <button
+                onClick={(e) => fetchMissingPlantData(e)}
+                className="mt-3 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
+                disabled={loading}
+              >
+                {loading ? "Fetching..." : "Fill in Details"}
+              </button>
+            )}
+          </div>
 
-          {/* Fetch Button */}
-          {isMissingData && (
-            <button
-              onClick={(e) => fetchMissingPlantData(e)}
-              className="mt-3 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
-              disabled={loading}
-            >
-              {loading ? "Fetching..." : "Fill in Details"}
-            </button>
-          )}
-
-          {/* ✏️ Edit + 🗑️ Delete Buttons */}
-          <div className="absolute bottom-4 right-4 flex gap-2">
+          {/* Buttons bottom right */}
+          <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -194,19 +195,17 @@ export default function PlantCard({ plant, setPlants, onEdit, onDelete }) {
           </div>
         </div>
       </div>
+
       {showEditModal && (
-            <EditPlantModal
-              plant={plant}
-              onClose={() => setShowEditModal(false)}
-              onUpdate={(updatedFields) =>
-                setPlants((prev) =>
-                  prev.map((p) =>
-                    p.id === plant.id ? { ...p, fields: updatedFields } : p
-                  )
-                )
-              }
-            />
-          )}
+        <EditPlantModal
+          plant={plant}
+          onClose={() => setShowEditModal(false)}
+          onUpdate={(updatedPlant) =>
+            setPlants((prev) => prev.map((p) => (p.id === plant.id ? updatedPlant : p)))
+          }
+          show={showEditModal}
+        />
+      )}
     </div>
   );
 }
