@@ -2,12 +2,13 @@ import { useState } from "react";
 import EditPlantModal from "./EditPlantModal";
 
 export default function PlantCard({ plant, setPlants }) {
-  if (!plant || !plant.fields) return null;
 
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  if (!plant || !plant.fields) return null;
 
   const formatSize = (value) => {
     if (!value || isNaN(value)) return "N/A";
