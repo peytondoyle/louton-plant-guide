@@ -1,12 +1,16 @@
 import { useState } from "react";
 import EditPlantModal from "./EditPlantModal";
 import Buttons from "./Buttons";
+import { useAuth } from "../context/AuthContext";
 
 export default function PlantCard({ plant, setPlants }) {
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  const { isAuthenticated, browseOnly } = useAuth();
+  const canEdit = isAuthenticated && !browseOnly;
 
   if (!plant || !plant.fields) return null;
 
@@ -174,7 +178,7 @@ export default function PlantCard({ plant, setPlants }) {
               </div>
             )}
 
-            {isMissingData && (
+            {isMissingData && canEdit && (
               <button
                 onClick={(e) => fetchMissingPlantData(e)}
                 className="mt-3 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
@@ -185,19 +189,21 @@ export default function PlantCard({ plant, setPlants }) {
             )}
           </div>
 
-          <div className="border-t p-3 flex justify-end gap-2 bg-gray-50">
-            <Buttons
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowEditModal(true);
-              }}
-            >
-              <span role="img" aria-label="edit">✏️</span> Edit
-            </Buttons>
-            <Buttons onClick={handleDeletePlant} variant="danger">
-              <span role="img" aria-label="delete">🗑</span> Delete
-            </Buttons>
-          </div>
+          {canEdit && (
+            <div className="border-t p-3 flex justify-end gap-2 bg-gray-50">
+              <Buttons
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEditModal(true);
+                }}
+              >
+                <span role="img" aria-label="edit">✏️</span> Edit
+              </Buttons>
+              <Buttons onClick={handleDeletePlant} variant="danger">
+                <span role="img" aria-label="delete">🗑</span> Delete
+              </Buttons>
+            </div>
+          )}
         </div>
       </div>
 

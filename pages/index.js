@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import PlantCard from "../components/PlantCard";
 import AddPlantModal from "../components/AddPlantModal";
+import { useAuth } from "../context/AuthContext";
+import AuthModal from "../components/AuthModal";
 
 export default function Home() {
   const [plants, setPlants] = useState([]);
@@ -12,6 +14,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("Date Added");
   const [sortDirection, setSortDirection] = useState("desc");
 
+  const { isAuthenticated, browseOnly } = useAuth();
+  const canEdit = isAuthenticated && !browseOnly;
   const FILTERS = ["All", "Annual", "Perennial", "Produce"];
 
   useEffect(() => {
@@ -94,61 +98,72 @@ export default function Home() {
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-center text-white">Plants de Louton</h1>
+    <>
+      {!isAuthenticated && !browseOnly && <AuthModal />}
 
-        {/* 🔍 Filter Buttons */}
-        <div className="flex justify-center gap-3 mt-4 mb-6 flex-wrap">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setSelectedFilter(filter)}
-              className={`px-3 py-1 text-sm rounded-full border transition ${
-                selectedFilter === filter
-                  ? "bg-white text-gray-900 font-semibold"
-                  : "bg-transparent text-white border-white"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
+      <div className={`min-h-screen ${!isAuthenticated && !browseOnly ? "blur-sm pointer-events-none" : ""}`}>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <h1 className="text-3xl font-bold text-center text-white">Plants de Louton</h1>
 
-          {/* Sort toggle pill */}
-          <button
-            onClick={() => {
-              const next = getNextSortOption(sortBy, sortDirection);
-              setSortBy(next.sortBy);
-              setSortDirection(next.sortDirection);
-            }}
-            className="px-3 py-1 text-sm rounded-full border transition bg-white text-gray-900 font-semibold"
-          >
-            {sortByLabel(sortBy, sortDirection)}
-          </button>
-        </div>
-
-        {/* 🌿 Plant Grid */}
-        <div className="flex justify-center">
-          <div className="flex flex-wrap justify-center gap-8">
-            {sortedPlants.map((plant) => (
-              <PlantCard key={plant.id} plant={plant} setPlants={setPlants} />
+          {/* 🔍 Filter Buttons */}
+          <div className="flex justify-center gap-3 mt-4 mb-6 flex-wrap">
+            {FILTERS.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setSelectedFilter(filter)}
+                className={`px-3 py-1 text-sm rounded-full border transition ${
+                  selectedFilter === filter
+                    ? "bg-white text-gray-900 font-semibold"
+                    : "bg-transparent text-white border-white"
+                }`}
+              >
+                {filter}
+              </button>
             ))}
+
+            {/* Sort toggle pill */}
+            <button
+              onClick={() => {
+                const next = getNextSortOption(sortBy, sortDirection);
+                setSortBy(next.sortBy);
+                setSortDirection(next.sortDirection);
+              }}
+              className="px-3 py-1 text-sm rounded-full border transition bg-white text-gray-900 font-semibold"
+            >
+              {sortByLabel(sortBy, sortDirection)}
+            </button>
+          </div>
+
+          {/* 🌿 Plant Grid */}
+          <div className="flex justify-center">
+            <div className="flex flex-wrap justify-center gap-8">
+              {sortedPlants.map((plant) => (
+                <PlantCard key={plant.id} plant={plant} setPlants={setPlants} canEdit={canEdit} />
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* ➕ Add Button */}
+        <button
+          onClick={() => {
+            if (canEdit) setShowModal(true);
+          }}
+          aria-label="Add a new plant"
+          className={`fixed bottom-6 right-6 w-14 h-14 rounded-full text-white text-2xl font-bold shadow-xl flex items-center justify-center transition ${
+            canEdit
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-gray-500 cursor-not-allowed"
+          }`}
+          disabled={!canEdit}
+        >
+          +
+        </button>
+
+        {showModal && (
+          <AddPlantModal onClose={() => setShowModal(false)} onPlantAdded={handlePlantAdded} />
+        )}
       </div>
-
-      {/* ➕ Add Button */}
-      <button
-        onClick={() => setShowModal(true)}
-        aria-label="Add a new plant"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 text-white text-2xl font-bold shadow-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center justify-center"
-      >
-        +
-      </button>
-
-      {showModal && (
-        <AddPlantModal onClose={() => setShowModal(false)} onPlantAdded={handlePlantAdded} />
-      )}
-    </div>
+    </>
   );
 }
