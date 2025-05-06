@@ -82,3 +82,11 @@ body::before {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  @apply bg-white text-black dark:bg-gray-900 dark:text-white transition-colors;
+}
