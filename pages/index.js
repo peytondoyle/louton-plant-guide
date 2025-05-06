@@ -39,6 +39,14 @@ export default function Home() {
     setPlants((prev) => [...prev, newPlant]);
   }
 
+  function handlePlantUpdated(updatedPlant) {
+    setPlants((prev) =>
+      prev.map((p) =>
+        p.id === updatedPlant.id ? { ...p, fields: updatedPlant.fields } : p
+      )
+    );
+  }
+
   const filteredPlants =
     selectedFilter === "All"
       ? plants
@@ -102,7 +110,6 @@ export default function Home() {
       {!isAuthenticated && !browseOnly && <AuthModal />}
 
       <div className={`min-h-screen ${!isAuthenticated && !browseOnly ? "blur-sm pointer-events-none" : ""}`}>
-        {/* Sign Out Button */}
         {(isAuthenticated || browseOnly) && (
           <div className="absolute top-4 right-4">
             <button
@@ -117,7 +124,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-center text-white">Plants de Louton</h1>
 
-          {/* 🔍 Filter Buttons */}
           <div className="flex justify-center gap-3 mt-4 mb-6 flex-wrap">
             {FILTERS.map((filter) => (
               <button
@@ -133,7 +139,6 @@ export default function Home() {
               </button>
             ))}
 
-            {/* Sort toggle pill */}
             <button
               onClick={() => {
                 const next = getNextSortOption(sortBy, sortDirection);
@@ -146,17 +151,21 @@ export default function Home() {
             </button>
           </div>
 
-          {/* 🌿 Plant Grid */}
           <div className="flex justify-center">
             <div className="flex flex-wrap justify-center gap-8">
               {sortedPlants.map((plant) => (
-                <PlantCard key={plant.id} plant={plant} setPlants={setPlants} canEdit={canEdit} />
+                <PlantCard
+                  key={plant.id}
+                  plant={plant}
+                  setPlants={setPlants}
+                  canEdit={canEdit}
+                  onUpdate={handlePlantUpdated}
+                />
               ))}
             </div>
           </div>
         </div>
 
-        {/* ➕ Add Button */}
         <button
           onClick={() => {
             if (canEdit) setShowModal(true);

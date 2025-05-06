@@ -3,7 +3,7 @@ import EditPlantModal from "./EditPlantModal";
 import Buttons from "./Buttons";
 import { useAuth } from "../context/AuthContext";
 
-export default function PlantCard({ plant, setPlants }) {
+export default function PlantCard({ plant, setPlants, onUpdate }) {
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
@@ -41,13 +41,15 @@ export default function PlantCard({ plant, setPlants }) {
       });
       const data = await res.json();
       if (data.success) {
+        const updatedFields = data.airtableData.records[0].fields;
+        const updated = {
+          ...plant,
+          fields: { ...plant.fields, ...updatedFields },
+        };
         setPlants((prev) =>
-          prev.map((p) =>
-            p.id === plant.id
-              ? { ...p, fields: { ...p.fields, ...data.airtableData.records[0].fields } }
-              : p
-          )
+          prev.map((p) => (p.id === plant.id ? updated : p))
         );
+        if (onUpdate) onUpdate(updated);
         setFlipped(true);
       } else {
         alert("Failed to update plant.");
@@ -211,9 +213,16 @@ export default function PlantCard({ plant, setPlants }) {
         <EditPlantModal
           plant={plant}
           onClose={() => setShowEditModal(false)}
-          onUpdate={(updatedPlant) =>
-            setPlants((prev) => prev.map((p) => (p.id === plant.id ? updatedPlant : p)))
-          }
+          onUpdate={(updatedFields) => {
+            const updatedPlant = {
+              ...plant,
+              fields: { ...plant.fields, ...updatedFields },
+            };
+            setPlants((prev) =>
+              prev.map((p) => (p.id === plant.id ? updatedPlant : p))
+            );
+            if (onUpdate) onUpdate(updatedPlant);
+          }}
         />
       )}
     </div>

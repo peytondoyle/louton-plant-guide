@@ -21,26 +21,35 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: `You are a horticulturist. Respond ONLY in valid JSON.`
+            content: `
+You are a plant encyclopedia. Given a plant name and optional cultivar, return estimated mature growth characteristics.
+
+Respond with valid JSON only. Use approximate or average mature size values. Always use:
+- inches for width and spacing
+- feet (decimal ok) for height
+- Only these three values for "Type": "Annual", "Perennial", or "Produce"
+– For "Expected bloom" choose "Early", "Mid" or "Late" then a month
+
+Units must be numeric and based on horticultural sources.
+
+Example format:
+{
+  "Type": "Perennial",
+  "Growth": "Moderate",
+  "Width": 36,
+  "Height": 5,
+  "Spacing": 30,
+  "Pruning": "Prune in late winter before new growth",
+  "Expected bloom": "Mid June"
+}
+`.trim()
           },
           {
             role: "user",
-            content: `For the plant "${query}", return:
-
-{
-  "Type": "Perennial/Annual/Other",
-  "Growth": "Slow/Moderate/Fast",
-  "Width": 0,
-  "Height": 0,
-  "Spacing": 0,
-  "Pruning": "Best time and method in one sentence",
-  "Expected bloom": "Early April" // use Early/Mid/Late + Month
-}
-
-No markdown, no comments — only the JSON block.`
+            content: `Plant: "${query}"`
           }
         ],
-        temperature: 0.7,
+        temperature: 0.6,
       },
       {
         headers: {
@@ -51,8 +60,6 @@ No markdown, no comments — only the JSON block.`
     );
 
     let raw = openAIResponse.data.choices?.[0]?.message?.content?.trim() || "";
-
-    // Strip any wrapping code fences
     const cleanJSON = raw.replace(/```json|```/g, "").trim();
 
     let plantData;
@@ -63,17 +70,25 @@ No markdown, no comments — only the JSON block.`
       return res.status(500).json({ error: "OpenAI returned invalid JSON." });
     }
 
-    const convertToFeet = (val) => {
+    const convertToInches = (val) => {
       if (!val || isNaN(val)) return null;
-      return Number(val > 12 ? (val / 12).toFixed(1) : val);
+      return Number(val > 12 ? val : (val * 12).toFixed(1));
+    };
+
+    const sanitizeType = (input) => {
+      const lower = input?.toLowerCase() || "";
+      if (lower.includes("annual")) return "Annual";
+      if (lower.includes("perennial")) return "Perennial";
+      if (lower.includes("vegetable") || lower.includes("produce") || lower.includes("fruit")) return "Produce";
+      return "Other";
     };
 
     const fields = {
-      Type: plantData.Type || "Other",
+      Type: sanitizeType(plantData.Type),
       Growth: plantData.Growth || "Moderate",
-      "Width in inches": convertToFeet(plantData.Width),
-      "Height in inches": convertToFeet(plantData.Height),
-      "Space in inches": convertToFeet(plantData.Spacing),
+      "Width in inches": convertToInches(plantData.Width),
+      "Height in inches": convertToInches(plantData.Height),
+      "Space in inches": convertToInches(plantData.Spacing),
       Pruning: plantData.Pruning || "N/A",
       "Expected bloom": plantData["Expected bloom"] || "Unknown",
     };
@@ -99,7 +114,7 @@ No markdown, no comments — only the JSON block.`
     return res.status(200).json({ success: true, airtableData: airtableResponse.data });
 
   } catch (error) {
-    console.error("🔥 Error in fillPlantData:", error.response?.data || error.message);
+    console.error("🔥 Error in fillPlantData:", error.response?.data || error.message, error);
     return res.status(500).json({ error: error.response?.data || error.message });
   }
 }

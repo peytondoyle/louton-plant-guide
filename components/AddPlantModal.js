@@ -15,23 +15,29 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
 
   const fetchPlantImages = async () => {
     if (!plantName.trim()) return;
-
-    try {
-      const query = [plantName, detailedName].filter(Boolean).join(" ");
-      const response = await fetch(`/api/fetchPlantImages?query=${encodeURIComponent(query)}`);
-      const data = await response.json();
-
-      if (data.error || !data.images.length) {
-        alert("No images found. Try another name.");
-        return;
+  
+    const tryQueries = [
+      [plantName, detailedName].filter(Boolean).join(" "),
+      plantName,
+      detailedName,
+    ];
+  
+    for (const query of tryQueries) {
+      try {
+        const response = await fetch(`/api/fetchPlantImages?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+  
+        if (data.images?.length) {
+          setImageOptions(data.images);
+          setStep(2);
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching images:", error);
       }
-
-      setImageOptions(data.images || []);
-      setStep(2);
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      alert("Failed to fetch images.");
     }
+  
+    alert("No images found. Try simplifying the plant name.");
   };
 
   const handleSubmit = async () => {
