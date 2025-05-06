@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function EditPlantModal({ plant, onClose, onUpdate }) {
-  const [form, setForm] = useState({
+  const initialFields = {
     "Plant name": plant.fields["Plant name"] || "",
     "Detailed name": plant.fields["Detailed name"] || "",
     "Yard location": plant.fields["Yard location"] || "",
@@ -10,13 +10,14 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
     "Width in inches": plant.fields["Width in inches"] || "",
     "Height in inches": plant.fields["Height in inches"] || "",
     "Space in inches": plant.fields["Space in inches"] || "",
-    Pruning: plant.fields.Pruning || "", // ✅ correct field name
-  });
+    Pruning: plant.fields.Pruning || "",
+  };
 
+  const [form, setForm] = useState(initialFields);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field, value) => {
-    setForm({ ...form, [field]: value });
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
@@ -30,12 +31,11 @@ export default function EditPlantModal({ plant, onClose, onUpdate }) {
 
       const data = await res.json();
       if (!res.ok) {
-        console.log("Updating plant with fields:", form);
         const message = typeof data.error === "string" ? data.error : JSON.stringify(data.error);
         throw new Error(message || "Update failed");
       }
 
-      onUpdate(data.updatedFields);
+      onUpdate({ ...plant, fields: data.updatedFields });
       onClose();
     } catch (err) {
       console.error("Update error:", err);

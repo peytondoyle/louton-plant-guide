@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 
 export default function AddPlantModal({ onClose, onPlantAdded }) {
   const [plantName, setPlantName] = useState("");
@@ -9,9 +10,8 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [step, setStep] = useState(1);
 
-  // 🌱 Fetch images from Google (or another API)
-  async function fetchPlantImages() {
-    if (!plantName.trim()) return; // Prevent unnecessary API calls
+  const fetchPlantImages = async () => {
+    if (!plantName.trim()) return;
 
     try {
       const response = await fetch(`/api/fetchPlantImages?query=${encodeURIComponent(plantName)}`);
@@ -28,27 +28,27 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
       console.error("Error fetching images:", error);
       alert("Failed to fetch images.");
     }
-  }
+  };
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     if (!plantName.trim()) {
       alert("Plant Name is required!");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       if (step === 1) {
         await fetchPlantImages();
-        return; // ✅ loading state will be reset in finally
+        return;
       }
-  
+
       if (!selectedImage) {
         alert("Please select an image.");
         return;
       }
-  
+
       const response = await fetch("/api/addPlant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,26 +59,26 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
           image: selectedImage,
         }),
       });
-  
+
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to add plant");
-  
+
       alert("Plant added successfully!");
       onPlantAdded(result.plant);
-      onClose(); // Auto-close after successful submission
-      window.location.reload(); // 🚀 Force a page reload after closing
+      onClose();
+      window.location.reload(); // Optional: force refresh
     } catch (error) {
       console.error("Failed to add plant:", error);
       alert("Failed to add plant.");
     } finally {
-      setLoading(false); // ✅ Always run, regardless of return or error
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg w-96">
-        <h2 className="text-lg font-bold mb-4">Add a New Plant</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center px-4">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-lg font-bold mb-4 text-center">Add a New Plant</h2>
 
         {step === 1 ? (
           <>
@@ -87,59 +87,65 @@ export default function AddPlantModal({ onClose, onPlantAdded }) {
               placeholder="Plant Name"
               value={plantName}
               onChange={(e) => setPlantName(e.target.value)}
-              className="w-full p-2 border rounded mb-2"
+              className="w-full p-2 border rounded mb-2 text-sm"
             />
             <input
               type="text"
               placeholder="Detailed Name"
               value={detailedName}
               onChange={(e) => setDetailedName(e.target.value)}
-              className="w-full p-2 border rounded mb-2"
+              className="w-full p-2 border rounded mb-2 text-sm"
             />
             <input
               type="text"
               placeholder="Yard Location"
               value={yardLocation}
               onChange={(e) => setYardLocation(e.target.value)}
-              className="w-full p-2 border rounded mb-2"
+              className="w-full p-2 border rounded mb-2 text-sm"
             />
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-500 text-white py-2 rounded mt-4"
               disabled={loading}
+              className="w-full bg-blue-500 text-white py-2 rounded text-sm hover:bg-blue-600 transition"
             >
               {loading ? "Loading..." : "Next"}
             </button>
           </>
         ) : (
           <>
-            <h3 className="text-sm text-gray-700 mb-2">Select an Image</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Select an Image</h3>
+            <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
               {imageOptions.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt="Plant option"
-                  className={`cursor-pointer rounded ${
-                    selectedImage === img ? "border-4 border-blue-500" : "border"
-                  }`}
-                  onClick={() => setSelectedImage(img)}
-                />
+                <div key={index} className="relative w-full aspect-square">
+                  <Image
+                    src={img}
+                    alt="Plant option"
+                    layout="fill"
+                    objectFit="cover"
+                    className={`rounded cursor-pointer ${
+                      selectedImage === img ? "ring-4 ring-blue-500" : "ring-1 ring-gray-300"
+                    }`}
+                    onClick={() => setSelectedImage(img)}
+                  />
+                </div>
               ))}
             </div>
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-green-500 text-white py-2 rounded mt-4"
               disabled={loading || !selectedImage}
+              className="w-full bg-green-600 text-white py-2 rounded text-sm mt-4 hover:bg-green-700 transition"
             >
               {loading ? "Saving..." : "Save Plant"}
             </button>
           </>
         )}
 
-        <button onClick={onClose} className="w-full text-gray-500 text-sm mt-2">
+        <button
+          onClick={onClose}
+          className="w-full text-gray-500 text-sm mt-3 hover:underline"
+        >
           Cancel
         </button>
       </div>
