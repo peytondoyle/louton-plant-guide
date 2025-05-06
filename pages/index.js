@@ -14,7 +14,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("Date Added");
   const [sortDirection, setSortDirection] = useState("desc");
 
-  const { isAuthenticated, browseOnly } = useAuth();
+  const { isAuthenticated, browseOnly, logout } = useAuth();
   const canEdit = isAuthenticated && !browseOnly;
   const FILTERS = ["All", "Annual", "Perennial", "Produce"];
 
@@ -102,6 +102,18 @@ export default function Home() {
       {!isAuthenticated && !browseOnly && <AuthModal />}
 
       <div className={`min-h-screen ${!isAuthenticated && !browseOnly ? "blur-sm pointer-events-none" : ""}`}>
+        {/* Sign Out Button */}
+        {(isAuthenticated || browseOnly) && (
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={logout}
+              className="text-sm text-gray-300 bg-gray-700 px-3 py-1 rounded hover:bg-gray-600 transition"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-center text-white">Plants de Louton</h1>
 
