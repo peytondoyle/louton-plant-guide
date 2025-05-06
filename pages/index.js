@@ -1,5 +1,6 @@
 // pages/index.js
 import { useEffect, useState } from "react";
+import Head from "next/head";
 import PlantCard from "../components/PlantCard";
 import AddPlantModal from "../components/AddPlantModal";
 import { useAuth } from "../context/AuthContext";
@@ -107,6 +108,20 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <title>Plants de Louton</title>
+        <meta name="description" content="Your interactive garden tracker – explore, add, and edit your plants with ease." />
+        <meta property="og:title" content="Plants de Louton" />
+        <meta property="og:description" content="Your interactive garden tracker – explore, add, and edit your plants with ease." />
+        {/* <meta property="og:image" content="https://louton-plant-guide.vercel.app/og-preview.jpg" />
+        <meta property="og:url" content="https://louton-plant-guide.vercel.app" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Plants de Louton" />
+        <meta name="twitter:description" content="Your interactive garden tracker – explore, add, and edit your plants with ease." />
+        <meta name="twitter:image" content="https://louton-plant-guide.vercel.app/og-preview.jpg" /> */}
+      </Head>
+
       {!isAuthenticated && !browseOnly && <AuthModal />}
 
       <div className={`min-h-screen ${!isAuthenticated && !browseOnly ? "blur-sm pointer-events-none" : ""}`}>
