@@ -1,3 +1,12 @@
+<!-- Archive-status header added 2026-08-29; original content below is unchanged. -->
+> **ARCHIVED — Plant-care guide (Next.js) — an early, pre-Verdant plant project.**
+>
+> - **Status:** Superseded
+> - **Died:** Superseded by Verdant. Last commit 2025-12-04 (Next.js CVE bump).
+> - **Successor / data:** Verdant, the live garden app at ~/Documents/Development/verdant.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
 ## Getting Started
